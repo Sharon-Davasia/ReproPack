@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReproPack — Options</title>
+  <link rel="stylesheet" href="popup.css" />
+  <style>
+    body { background: var(--bg); }
+    .wrap { max-width: 640px; margin: 32px auto; padding: 0 16px 48px; }
+    .wrap h1 { font-size: 22px; margin: 0 0 4px; }
+    .wrap .sub { color: var(--muted); margin: 0 0 20px; }
+    .note { background: rgba(108,140,255,.08); border: 1px solid rgba(108,140,255,.35); border-radius: 10px; padding: 10px 12px; font-size: 13px; margin-bottom: 16px; }
+    #save-status { color: var(--good); font-size: 13px; min-height: 20px; }
+    .section-title { font-size: 13px; font-weight: 700; color: var(--muted); margin: 18px 0 8px; text-transform: uppercase; letter-spacing: .5px; }
+    .cap { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; border-bottom: 1px dashed var(--border); }
+    .cap:last-child { border-bottom: 0; }
+    .cap .yes { color: var(--good); }
+    .cap .no { color: var(--muted); }
+    kbd { background: var(--panel); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: 11px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>📦 ReproPack — Options</h1>
+    <p class="sub">ReproPack works fully offline. AI and filing are optional and use your own credentials.</p>
+
+    <!-- AI -->
+    <div class="card">
+      <h2>AI organizer (optional)</h2>
+      <label class="check"><input type="checkbox" id="opt-use-ai" /> Use AI to tidy wording (evidence-only prompt)</label>
+      <label class="field">
+        <span>Provider</span>
+        <select id="opt-provider">
+          <option value="openai">OpenAI-compatible (OpenAI, Azure, gateways…)</option>
+          <option value="anthropic">Anthropic (Claude)</option>
+          <option value="gemini">Google Gemini</option>
+        </select>
+      </label>
+      <label class="field">
+        <span>API key <em>(stored only in this browser)</em></span>
+        <input id="opt-key" type="password" placeholder="sk-… / sk-ant-… / AIza…" autocomplete="off" />
+      </label>
+      <label class="field">
+        <span>Model <em>(optional — sensible default per provider)</em></span>
+        <input id="opt-model" type="text" placeholder="gpt-4o-mini · claude-sonnet-4-20250514 · gemini-2.0-flash" autocomplete="off" />
+      </label>
+      <label class="field" id="field-baseurl">
+        <span>Base URL <em>(OpenAI-compatible only)</em></span>
+        <input id="opt-baseurl" type="text" placeholder="https://api.openai.com/v1" autocomplete="off" />
+      </label>
+      <div class="note">
+        🔒 <strong>Privacy:</strong> keys stay in <code>chrome.storage.local</code> and are sent
+        <em>only</em> to the provider you choose, in a direct request from your browser.
+        ReproPack has no server. The prompt forbids inventing causes — unknowns stay in “Missing information”.
+      </div>
+    </div>
+
+    <!-- Filing -->
+    <div class="card">
+      <h2>File destinations</h2>
+      <p class="hint">Credentials for “File it” in the popup. Nothing is sent until you press File report.</p>
+
+      <div class="section-title">GitHub</div>
+      <label class="field"><span>Token <em>(classic: repo scope · fine-grained: Issues → Read &amp; write)</em></span>
+        <input id="opt-gh-token" type="password" autocomplete="off" placeholder="ghp_… / github_pat_…" /></label>
+      <label class="field"><span>Repository</span>
+        <input id="opt-gh-repo" type="text" autocomplete="off" placeholder="owner/repo" /></label>
+      <div class="grid-2">
+        <label class="field"><span>Labels</span><input id="opt-gh-labels" type="text" autocomplete="off" placeholder="bug, from-repropack" /></label>
+        <label class="field"><span>Assignees</span><input id="opt-gh-assignees" type="text" autocomplete="off" placeholder="octocat" /></label>
+      </div>
+      <label class="field"><span>API base <em>(GitHub Enterprise only)</em></span>
+        <input id="opt-gh-apibase" type="text" autocomplete="off" placeholder="https://api.github.com" /></label>
+
+      <div class="section-title">Jira</div>
+      <div class="grid-2">
+        <label class="field"><span>Site URL</span><input id="opt-jira-baseurl" type="text" autocomplete="off" placeholder="https://team.atlassian.net" /></label>
+        <label class="field"><span>Account email</span><input id="opt-jira-email" type="text" autocomplete="off" placeholder="you@company.com" /></label>
+      </div>
+      <label class="field"><span>API token <em>(id.atlassian.com → Security → API tokens)</em></span>
+        <input id="opt-jira-token" type="password" autocomplete="off" /></label>
+      <div class="grid-2">
+        <label class="field"><span>Project key</span><input id="opt-jira-project" type="text" autocomplete="off" placeholder="ENG" /></label>
+        <label class="field"><span>Issue type</span><input id="opt-jira-type" type="text" autocomplete="off" placeholder="Bug" /></label>
+      </div>
+      <div class="grid-2">
+        <label class="field"><span>Priority <em>(optional)</em></span><input id="opt-jira-priority" type="text" autocomplete="off" placeholder="High" /></label>
+        <label class="field"><span>Deployment</span>
+          <select id="opt-jira-deployment">
+            <option value="cloud">Jira Cloud (API v3, ADF)</option>
+            <option value="server">Jira Server / DC (API v2, wiki)</option>
+          </select>
+        </label>
+      </div>
+      <label class="field"><span>Labels <em>(optional)</em></span><input id="opt-jira-labels" type="text" autocomplete="off" placeholder="from-repropack" /></label>
+
+      <div class="section-title">Slack</div>
+      <label class="field"><span>Incoming webhook URL</span>
+        <input id="opt-slack-webhook" type="password" autocomplete="off" placeholder="https://hooks.slack.com/services/…" /></label>
+
+      <div class="section-title">Custom webhook</div>
+      <label class="field"><span>Endpoint URL</span><input id="opt-hook-url" type="text" autocomplete="off" placeholder="https://your.app/hooks/repropack" /></label>
+      <label class="field"><span>Bearer token <em>(optional)</em></span><input id="opt-hook-token" type="password" autocomplete="off" /></label>
+    </div>
+
+    <!-- Defaults -->
+    <div class="card">
+      <h2>Defaults</h2>
+      <label class="check"><input type="checkbox" id="opt-strip" /> Strip query params &amp; hash from URLs by default</label>
+      <label class="check"><input type="checkbox" id="opt-redact" checked /> Redact tokens, emails &amp; secrets by default</label>
+      <label class="check"><input type="checkbox" id="opt-shot" checked /> Attach screenshot reference to reports by default</label>
+      <label class="check"><input type="checkbox" id="opt-timeline" checked /> Include the recorded timeline by default</label>
+      <label class="field" style="margin-top:10px">
+        <span>Maximum clip length <em>(seconds, 5–120)</em></span>
+        <input id="opt-maxclip" type="number" min="5" max="120" step="5" />
+      </label>
+    </div>
+
+    <!-- Capabilities -->
+    <div class="card">
+      <h2>This browser</h2>
+      <div id="caps" class="caps"></div>
+      <p class="hint" id="caps-note"></p>
+    </div>
+
+    <!-- Data -->
+    <div class="card">
+      <h2>Your data</h2>
+      <p class="hint">Reports live only in this browser. Export them before clearing your profile.</p>
+      <div class="row">
+        <button id="btn-export" class="btn btn-ghost btn-sm">⬇ Export all reports (.json)</button>
+        <button id="btn-import" class="btn btn-ghost btn-sm">⬆ Import</button>
+        <button id="btn-clear" class="btn btn-ghost btn-sm">🗑 Clear history</button>
+        <input id="import-file" type="file" accept="application/json" class="hidden" />
+      </div>
+      <p class="hint" id="history-info"></p>
+      <p class="hint">📱 On a phone? Open <code>share/</code> from the repo as a PWA and use the system share sheet.</p>
+    </div>
+
+    <div class="row" style="margin-top:16px">
+      <button id="btn-save" class="btn btn-primary">Save settings</button>
+      <span id="save-status" aria-live="polite"></span>
+    </div>
+
+    <p class="sub" style="margin-top:20px">Tip: press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd> (or <kbd>⌘</kbd>+<kbd>Shift</kbd>+<kbd>R</kbd>) anywhere to open ReproPack.</p>
+  </div>
+  <script src="options.js"></script>
+</body>
+</html>
