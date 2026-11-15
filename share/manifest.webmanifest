@@ -1,0 +1,22 @@
+{
+  "name": "ReproPack — Bug Report",
+  "short_name": "ReproPack",
+  "description": "Turn a shared link and a short note into a clean Markdown bug report. Offline, no account.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f1115",
+  "theme_color": "#0f1115",
+  "icons": [
+    { "src": "../icons/icon48.png", "sizes": "48x48", "type": "image/png", "purpose": "any" },
+    { "src": "../icons/icon128.png", "sizes": "128x128", "type": "image/png", "purpose": "any" },
+    { "src": "../icons/icon128.png", "sizes": "128x128", "type": "image/png", "purpose": "maskable" }
+  ],
+  "share_target": {
+    "action": "./",
+    "method": "GET",
+    "enctype": "application/x-www-form-urlencoded",
+    "params": { "title": "title", "text": "text", "url": "url" }
+  }
+}

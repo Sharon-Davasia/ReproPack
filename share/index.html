@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>ReproPack — Bug Report</title>
+<meta name="theme-color" content="#0f1115" />
+<link rel="manifest" href="manifest.webmanifest" />
+<link rel="apple-touch-icon" href="../icons/icon128.png" />
+<style>
+  :root { --bg:#0f1115; --panel:#171b22; --card:#1c212b; --border:#2a3140; --text:#e8ecf3; --muted:#9aa5b8; --accent:#6c8cff; --good:#3ddc97; --warn:#ffb454; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif; padding:16px 14px 48px; }
+  header { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  header h1 { font-size:19px; margin:0; }
+  header .sub { color:var(--muted); font-size:12px; margin:0; }
+  .badge { margin-left:auto; font-size:11px; color:var(--good); border:1px solid rgba(61,220,151,.4); border-radius:999px; padding:2px 8px; white-space:nowrap; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:14px; margin:12px 0; }
+  .card h2 { font-size:14px; margin:0 0 8px; }
+  .shared { background:rgba(108,140,255,.08); border:1px solid rgba(108,140,255,.35); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:12px; }
+  .shared code { word-break:break-all; font-size:12px; }
+  label.field { display:block; margin-bottom:10px; }
+  label.field > span { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+  input, textarea, select { width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:10px; padding:11px 12px; font:inherit; font-size:15px; }
+  textarea { resize:vertical; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; }
+  button { flex:1 1 auto; min-height:46px; border-radius:11px; border:1px solid var(--border); background:var(--panel); color:var(--text); font:inherit; font-weight:600; font-size:15px; padding:10px 14px; }
+  button.primary { background:linear-gradient(135deg,var(--accent),#8b6cff); border-color:transparent; color:#fff; }
+  button:disabled { opacity:.5; }
+  #out { width:100%; min-height:280px; background:#0b0e13; border:1px solid var(--border); border-radius:10px; color:var(--text); padding:12px; font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace; }
+  .hint { color:var(--muted); font-size:12px; margin:6px 0 0; }
+  .feedback { color:var(--good); font-size:13px; min-height:20px; margin:8px 0 0; }
+  .missing { background:rgba(255,180,84,.08); border:1px solid rgba(255,180,84,.35); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:10px; }
+  .missing ul { margin:6px 0 0; padding-left:18px; }
+</style>
+</head>
+<body>
+
+<header>
+  <span style="font-size:26px" aria-hidden="true">📦</span>
+  <div>
+    <h1>ReproPack</h1>
+    <p class="sub">Turn “it’s broken” into a report</p>
+  </div>
+  <span class="badge" id="mode-badge">offline</span>
+</header>
+
+<div class="shared" id="shared-box" style="display:none">
+  <strong>Arrived from your share sheet</strong>
+  <div id="shared-detail" class="hint" style="margin-top:4px"></div>
+</div>
+
+<div class="card">
+  <h2>1 · What broke?</h2>
+  <label class="field"><span>Page URL</span><input id="f-url" type="url" inputmode="url" placeholder="https://…" /></label>
+  <label class="field"><span>Title</span><input id="f-title" type="text" placeholder="e.g. Checkout button does nothing" /></label>
+  <label class="field"><span>What happened?</span><textarea id="f-what" rows="3" placeholder="What did you see?"></textarea></label>
+  <label class="field"><span>What did you expect?</span><textarea id="f-expected" rows="2" placeholder="What should have happened?"></textarea></label>
+  <label class="field"><span>Steps <em>(one per line)</em></span><textarea id="f-steps" rows="3" placeholder="Open the page&#10;Tap Pay&#10;Nothing happens"></textarea></label>
+  <div class="row">
+    <label class="field" style="flex:1"><span>Severity</span>
+      <select id="f-severity">
+        <option value="">—</option>
+        <option>Blocker — cannot proceed</option>
+        <option>Major — workaround exists</option>
+        <option>Minor — cosmetic / edge case</option>
+        <option>Question — need clarification</option>
+      </select>
+    </label>
+    <label class="field" style="flex:1"><span>Frequency</span>
+      <select id="f-frequency">
+        <option value="">—</option>
+        <option>Always</option><option>Sometimes</option><option>Once</option><option>Not sure</option>
+      </select>
+    </label>
+  </div>
+  <button id="btn-generate" class="primary">✨ Generate report</button>
+  <p class="hint">Runs entirely on this device. No account, no server.</p>
+</div>
+
+<div class="card">
+  <h2>2 · Your report</h2>
+  <div class="missing" id="missing-box" style="display:none">
+    <strong>⚠️ Still missing</strong>
+    <ul id="missing-list"></ul>
+  </div>
+  <textarea id="out" spellcheck="false" placeholder="Your Markdown report appears here…"></textarea>
+  <div class="row" style="margin-top:10px">
+    <button id="btn-copy">📋 Copy</button>
+    <button id="btn-share">📤 Share</button>
+    <button id="btn-download">⬇ .md</button>
+  </div>
+  <p class="feedback" id="feedback" aria-live="polite"></p>
+  <p class="hint">Paste it into Jira, GitHub, Slack — or send it back through any app that accepts text.</p>
+</div>
+
+<script src="../lib/report.js"></script>
+<script src="share.js"></script>
+</body>
+</html>
