@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ReproPack</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">📦</span>
+        <div>
+          <h1>ReproPack</h1>
+          <p class="tagline">Evidence in → filed bug report out</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <button id="btn-history" class="btn btn-ghost btn-sm" title="Saved reports">🕘 History</button>
+        <button id="btn-options" class="btn btn-ghost btn-sm" title="Settings">⚙️</button>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="capture" role="tab">Capture</button>
+      <button class="tab" data-tab="report" role="tab">Report</button>
+      <button class="tab" data-tab="file" role="tab">File</button>
+      <button class="tab" data-tab="history" role="tab">History <span id="history-count" class="badge">0</span></button>
+    </nav>
+
+    <!-- ===== CAPTURE TAB ===== -->
+    <section id="tab-capture" class="panel active">
+      <div class="card">
+        <div class="card-head">
+          <h2>1 · Capture evidence</h2>
+          <span id="capture-status" class="status">Not captured yet</span>
+        </div>
+        <p class="hint">Screenshot, URL, console errors, failed requests and recorded interactions from this tab. Nothing leaves your browser.</p>
+        <div class="row">
+          <button id="btn-capture" class="btn btn-primary">📸 Capture evidence</button>
+          <button id="btn-clear" class="btn btn-ghost" disabled>Clear</button>
+        </div>
+        <div id="evidence-summary" class="evidence-summary hidden">
+          <div class="ev-row"><span>URL</span><code id="ev-url">—</code></div>
+          <div class="ev-row"><span>Errors</span><strong id="ev-errors">0</strong></div>
+          <div class="ev-row"><span>Requests</span><strong id="ev-network">0</strong></div>
+          <div class="ev-row"><span>Timeline</span><strong id="ev-timeline">0 events</strong></div>
+          <div class="ev-row"><span>Screenshot</span><strong id="ev-shot">—</strong></div>
+        </div>
+        <div id="shot-wrap" class="shot-wrap hidden">
+          <img id="shot-img" alt="Captured screenshot" />
+          <div class="row shot-actions">
+            <button id="btn-download-shot" class="btn btn-ghost btn-sm">⬇ Download PNG</button>
+            <button id="btn-copy-shot" class="btn btn-ghost btn-sm">📋 Copy image</button>
+            <label class="check"><input type="checkbox" id="chk-include-shot" checked /> Attach to report</label>
+          </div>
+        </div>
+        <div id="errors-wrap" class="errors-wrap hidden">
+          <h3>Captured errors <span class="hint-inline">(untick to exclude)</span></h3>
+          <ul id="errors-list" class="errors-list"></ul>
+        </div>
+      </div>
+
+      <!-- Timeline recording -->
+      <div class="card">
+        <div class="card-head">
+          <h2>2 · Record the failure</h2>
+          <span id="rec-status" class="status">Not recording</span>
+        </div>
+        <p class="hint">Start recording, reproduce the bug on the page, then capture. Clicks, navigations, submits and shortcut keys are timestamped. Typed text is never recorded.</p>
+        <div class="row">
+          <button id="btn-record-start" class="btn btn-primary">⏺ Start recording</button>
+          <button id="btn-record-stop" class="btn btn-ghost" disabled>⏹ Stop</button>
+          <button id="btn-timeline-refresh" class="btn btn-ghost btn-sm" title="Refresh timeline">↻</button>
+        </div>
+        <ul id="timeline-list" class="timeline-list hidden"></ul>
+        <p id="timeline-empty" class="hint">No events yet. Press “Start recording”, then use the page.</p>
+
+        <details class="details" open>
+          <summary>🎬 Record a video clip <span class="pill-soft">up to 2 min</span></summary>
+          <div class="row" style="margin-top:8px">
+            <button id="btn-clip-start" class="btn btn-ghost btn-sm">⏺ Start clip</button>
+            <button id="btn-clip-stop" class="btn btn-ghost btn-sm" disabled>⏹ Stop clip</button>
+            <span id="clip-timer" class="mono-sm">00:00</span>
+          </div>
+          <p id="clip-status" class="hint">Records this tab with tabCapture. The file saves to your Downloads — nothing is uploaded.</p>
+          <div id="clip-info" class="clip-info hidden">
+            <code id="clip-name">—</code>
+            <div class="row" style="margin-top:6px">
+              <button id="btn-clip-download" class="btn btn-ghost btn-sm">⬇ Save clip again</button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h2>3 · Your words</h2><span class="hint-inline">Neither the AI nor the template invents these</span></div>
+        <label class="field">
+          <span>Title</span>
+          <input id="f-title" type="text" placeholder="e.g. Checkout button does nothing on Safari" maxlength="120" />
+        </label>
+        <label class="field">
+          <span>What happened?</span>
+          <textarea id="f-what" rows="3" placeholder="What did you see? Be specific: which page, which action, what broke."></textarea>
+        </label>
+        <label class="field">
+          <span>What did you expect?</span>
+          <textarea id="f-expected" rows="2" placeholder="What should have happened instead?"></textarea>
+        </label>
+        <label class="field">
+          <span>Steps to reproduce <em>(one per line)</em></span>
+          <textarea id="f-steps" rows="4" placeholder="1. Open the checkout page&#10;2. Click “Pay now”&#10;3. Nothing happens"></textarea>
+        </label>
+        <button id="btn-steps-from-timeline" class="btn btn-ghost btn-sm">⤵ Draft steps from the recording</button>
+        <div class="grid-2">
+          <label class="field">
+            <span>Severity</span>
+            <select id="f-severity">
+              <option value="">—</option>
+              <option>Blocker — cannot proceed</option>
+              <option>Major — workaround exists</option>
+              <option>Minor — cosmetic / edge case</option>
+              <option>Question — need clarification</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Frequency</span>
+            <select id="f-frequency">
+              <option value="">—</option>
+              <option>Always</option>
+              <option>Sometimes</option>
+              <option>Once</option>
+              <option>Not sure</option>
+            </select>
+          </label>
+        </div>
+        <label class="field">
+          <span>Account / role / test data</span>
+          <input id="f-account" type="text" placeholder="e.g. Free plan, user test@example.com, order #123" maxlength="120" />
+        </label>
+        <label class="field">
+          <span>Extra notes</span>
+          <textarea id="f-notes" rows="2" placeholder="Anything else the investigator should know…"></textarea>
+        </label>
+
+        <div id="triage-box" class="triage-box hidden">
+          <div class="triage-head">
+            <strong id="triage-chip">Suggestion</strong>
+            <button id="btn-apply-triage" class="btn btn-ghost btn-sm">Use it</button>
+          </div>
+          <ul id="triage-reasons" class="triage-reasons"></ul>
+          <p class="hint" id="triage-caveat"></p>
+        </div>
+      </div>
+
+      <div class="card privacy-card">
+        <h2>Privacy</h2>
+        <label class="check"><input type="checkbox" id="chk-strip" /> Strip query params &amp; hash from URLs</label>
+        <label class="check"><input type="checkbox" id="chk-redact" checked /> Redact tokens, emails &amp; secrets</label>
+        <label class="check"><input type="checkbox" id="chk-include-timeline" checked /> Include the recorded timeline</label>
+        <p class="hint">Review the report before sharing — screenshots and clips can contain sensitive data.</p>
+      </div>
+
+      <button id="btn-generate" class="btn btn-primary btn-block btn-lg">✨ Generate report</button>
+      <p id="gen-note" class="gen-note">Uses the offline organizer. Enable AI in ⚙️ Options for wording polish (still evidence-only).</p>
+    </section>
+
+    <!-- ===== REPORT TAB ===== -->
+    <section id="tab-report" class="panel">
+      <div class="card">
+        <div class="card-head">
+          <h2>Your report</h2>
+          <span id="report-status" class="status">Editable — review before sharing</span>
+        </div>
+        <div id="dupes-box" class="dupes-box hidden">
+          <strong>🔍 Possible duplicates in your history:</strong>
+          <ul id="dupes-list"></ul>
+        </div>
+        <div id="missing-box" class="missing-box hidden">
+          <strong>⚠️ Still missing:</strong>
+          <ul id="missing-list"></ul>
+        </div>
+        <textarea id="report-out" rows="20" spellcheck="false" placeholder="Your Markdown report will appear here. Press “Generate report” on the Capture tab first."></textarea>
+        <div class="row report-actions">
+          <button id="btn-copy-md" class="btn btn-primary">📋 Copy Markdown</button>
+          <button id="btn-copy-jira" class="btn btn-ghost">Copy Jira wiki</button>
+          <button id="btn-download-md" class="btn btn-ghost">⬇ .md</button>
+          <button id="btn-save" class="btn btn-ghost">💾 Save</button>
+        </div>
+        <div class="row report-actions">
+          <button id="btn-download-har" class="btn btn-ghost btn-sm">⬇ HAR-lite (.har)</button>
+          <button id="btn-download-clip-report" class="btn btn-ghost btn-sm hidden">⬇ Video clip</button>
+          <span id="har-note" class="hint-inline">No request bodies are recorded.</span>
+        </div>
+        <p id="copy-feedback" class="copy-feedback" aria-live="polite"></p>
+      </div>
+    </section>
+
+    <!-- ===== FILE TAB ===== -->
+    <section id="tab-file" class="panel">
+      <div class="card">
+        <div class="card-head">
+          <h2>File it</h2>
+          <span id="file-target-status" class="status">Not configured</span>
+        </div>
+        <p class="hint">Creates the issue or posts the message directly from your browser using your own credentials. Review the report first — this sends it.</p>
+        <label class="field">
+          <span>Destination</span>
+          <select id="file-target">
+            <option value="github">GitHub issue</option>
+            <option value="jira">Jira issue</option>
+            <option value="slack">Slack (webhook)</option>
+            <option value="webhook">Custom webhook</option>
+          </select>
+        </label>
+
+        <div class="target-fields" data-target="github">
+          <label class="field"><span>Token <em>(repo scope)</em></span><input id="fg-token" type="password" autocomplete="off" placeholder="ghp_…" /></label>
+          <label class="field"><span>Repository</span><input id="fg-repo" type="text" autocomplete="off" placeholder="owner/repo or full URL" /></label>
+          <label class="field"><span>Labels <em>(comma separated, optional)</em></span><input id="fg-labels" type="text" autocomplete="off" placeholder="bug, from-repropack" /></label>
+          <label class="field"><span>Assignees <em>(optional)</em></span><input id="fg-assignees" type="text" autocomplete="off" placeholder="octocat" /></label>
+          <label class="field"><span>API base <em>(GitHub Enterprise, optional)</em></span><input id="fg-apibase" type="text" autocomplete="off" placeholder="https://api.github.com" /></label>
+        </div>
+
+        <div class="target-fields hidden" data-target="jira">
+          <label class="field"><span>Site URL</span><input id="fj-baseurl" type="text" autocomplete="off" placeholder="https://your-team.atlassian.net" /></label>
+          <label class="field"><span>Account email</span><input id="fj-email" type="text" autocomplete="off" placeholder="you@company.com" /></label>
+          <label class="field"><span>API token</span><input id="fj-token" type="password" autocomplete="off" placeholder="Atlassian API token" /></label>
+          <div class="grid-2">
+            <label class="field"><span>Project key</span><input id="fj-project" type="text" autocomplete="off" placeholder="ENG" /></label>
+            <label class="field"><span>Issue type</span><input id="fj-type" type="text" autocomplete="off" placeholder="Bug" /></label>
+          </div>
+          <div class="grid-2">
+            <label class="field"><span>Priority <em>(optional)</em></span><input id="fj-priority" type="text" autocomplete="off" placeholder="High" /></label>
+            <label class="field"><span>Deployment</span>
+              <select id="fj-deployment">
+                <option value="cloud">Jira Cloud (API v3)</option>
+                <option value="server">Jira Server / DC (API v2)</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <div class="target-fields hidden" data-target="slack">
+          <label class="field"><span>Incoming webhook URL</span><input id="fs-webhook" type="password" autocomplete="off" placeholder="https://hooks.slack.com/services/…" /></label>
+          <p class="hint">Slack → App → Incoming Webhooks → Add to a channel → copy the URL.</p>
+        </div>
+
+        <div class="target-fields hidden" data-target="webhook">
+          <label class="field"><span>Endpoint URL</span><input id="fw-url" type="text" autocomplete="off" placeholder="https://your.app/hooks/repropack" /></label>
+          <label class="field"><span>Bearer token <em>(optional)</em></span><input id="fw-token" type="password" autocomplete="off" placeholder="sent as Authorization: Bearer …" /></label>
+          <p class="hint">Receives JSON: <code>{ source, event, report: { title, markdown, url, severity, fingerprint } }</code></p>
+        </div>
+
+        <div class="row">
+          <button id="btn-save-filing" class="btn btn-ghost btn-sm">💾 Save destination settings</button>
+          <button id="btn-file" class="btn btn-primary">🚀 File report</button>
+        </div>
+        <p id="file-status" class="copy-feedback" aria-live="polite"></p>
+        <p id="file-link-wrap" class="hidden"><a id="file-link" href="#" target="_blank" rel="noopener">Open the created item ↗</a></p>
+      </div>
+    </section>
+
+    <!-- ===== HISTORY TAB ===== -->
+    <section id="tab-history" class="panel">
+      <div class="card">
+        <div class="card-head">
+          <h2>Saved reports</h2>
+          <button id="btn-clear-history" class="btn btn-ghost btn-sm">Clear all</button>
+        </div>
+        <p class="hint">Stored only in this browser (chrome.storage.local). Newest first. Used for duplicate detection.</p>
+        <ul id="history-list" class="history-list"></ul>
+        <p id="history-empty" class="hint">No saved reports yet. Generate one and press “Save”.</p>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <span>ReproPack organizes evidence — it never invents a cause.</span>
+      <span id="ai-badge" class="ai-badge hidden">AI organizer ON</span>
+    </footer>
+  </div>
+
+  <script src="lib/report.js"></script>
+  <script src="lib/ai.js"></script>
+  <script src="lib/timeline.js"></script>
+  <script src="lib/har.js"></script>
+  <script src="lib/triage.js"></script>
+  <script src="lib/dupes.js"></script>
+  <script src="lib/filing.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
