@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ReproPack — Live demo</title>
+<style>
+  :root { --bg:#0f1115; --panel:#171b22; --card:#1c212b; --border:#2a3140; --text:#e8ecf3; --muted:#9aa5b8; --accent:#6c8cff; --accent2:#8b6cff; --good:#3ddc97; --warn:#ffb454; --danger:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font:15px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; }
+  a { color:var(--accent); }
+  .hero { max-width:1120px; margin:0 auto; padding:52px 20px 8px; text-align:center; }
+  .hero .pill { display:inline-block; background:rgba(108,140,255,.12); border:1px solid rgba(108,140,255,.4); color:#b9c8ff; border-radius:999px; padding:4px 14px; font-size:13px; font-weight:600; }
+  .hero h1 { font-size:44px; margin:16px 0 8px; letter-spacing:-.5px; }
+  .hero h1 .grad { background:linear-gradient(90deg,var(--accent),var(--accent2)); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .hero p.lead { color:var(--muted); font-size:18px; max-width:660px; margin:0 auto; }
+  .hero .cta { margin-top:22px; display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .btn { border:1px solid var(--border); background:var(--panel); color:var(--text); padding:10px 18px; border-radius:10px; cursor:pointer; font-weight:600; font-size:14px; text-decoration:none; display:inline-block; }
+  .btn-primary { background:linear-gradient(135deg,var(--accent),var(--accent2)); border-color:transparent; color:#fff; }
+  .btn:hover { border-color:var(--accent); }
+  .btn-sm { padding:6px 11px; font-size:12.5px; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .how { max-width:1120px; margin:28px auto 0; padding:0 20px; display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+  .how .step { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; }
+  .how .step .n { font-size:11px; font-weight:800; color:var(--accent); letter-spacing:1px; }
+  .how .step h3 { margin:6px 0 4px; font-size:15px; }
+  .how .step p { margin:0; color:var(--muted); font-size:13px; }
+  .playground { max-width:1120px; margin:34px auto 0; padding:0 20px 64px; }
+  .playground > h2 { font-size:26px; margin:0 0 4px; }
+  .playground > p { color:var(--muted); margin:0 0 18px; }
+  .cols { display:grid; grid-template-columns:1fr 1fr; gap:16px; align-items:start; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:16px; margin-bottom:14px; }
+  .card h3 { margin:0 0 10px; font-size:15px; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .card h3 .hint { font-weight:400; }
+  .fake-page { background:#fff; color:#111; border-radius:10px; padding:18px; }
+  .fake-page h4 { margin:0 0 4px; }
+  .fake-page .price { font-size:28px; font-weight:800; margin:8px 0; }
+  .fake-page button { background:#111; color:#fff; border:0; padding:12px 18px; border-radius:8px; font-weight:700; cursor:pointer; width:100%; }
+  .fake-page .nav { display:flex; gap:8px; margin-top:10px; }
+  .fake-page .nav button { background:#eef1f7; color:#111; font-weight:600; padding:8px; font-size:12px; }
+  .fake-page .err { background:#fff1f1; border:1px solid #ffb3b3; color:#a00; border-radius:8px; padding:10px; margin-top:12px; font-size:13px; display:none; }
+  .field { display:block; margin-bottom:10px; }
+  .field > span { display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:4px; }
+  .field input, .field textarea, .field select { width:100%; background:var(--panel); border:1px solid var(--border); color:var(--text); border-radius:9px; padding:9px 11px; font:inherit; font-size:13px; }
+  #demo-out { width:100%; min-height:300px; background:#0b0e13; border:1px solid var(--border); color:var(--text); border-radius:10px; padding:12px; font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; resize:vertical; }
+  .row { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; align-items:center; }
+  .check { display:flex; gap:8px; align-items:center; font-size:13px; margin:6px 0; cursor:pointer; }
+  .check input { accent-color:var(--accent); }
+  .hint { color:var(--muted); font-size:12px; }
+  .chip { display:inline-block; border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700; background:rgba(108,140,255,.15); border:1px solid rgba(108,140,255,.45); color:#b9c8ff; }
+  .chip.blk { background:rgba(255,107,107,.12); border-color:rgba(255,107,107,.45); color:#ffb3b3; }
+  .chip.maj { background:rgba(255,180,84,.12); border-color:rgba(255,180,84,.45); color:#ffd9a8; }
+  .chip.min { background:rgba(61,220,151,.12); border-color:rgba(61,220,151,.45); color:#a8f0d0; }
+  .timeline { list-style:none; margin:10px 0 0; padding:0; max-height:180px; overflow:auto; border:1px solid var(--border); border-radius:10px; }
+  .timeline li { display:grid; grid-template-columns:56px 1fr; gap:8px; padding:5px 9px; font-size:12px; border-bottom:1px solid rgba(255,255,255,.05); }
+  .timeline li:last-child { border-bottom:0; }
+  .timeline .t { font:11px ui-monospace,Menlo,monospace; color:var(--muted); }
+  .timeline .k { font-weight:600; }
+  .timeline .k.err { color:var(--danger); }
+  .timeline .k.nav { color:var(--accent); }
+  .timeline .k.click { color:var(--good); }
+  .missing { background:rgba(255,180,84,.08); border:1px solid rgba(255,180,84,.35); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:10px; }
+  .missing ul { margin:6px 0 0; padding-left:18px; }
+  .dupes { background:rgba(108,140,255,.08); border:1px solid rgba(108,140,255,.35); border-radius:10px; padding:10px 12px; font-size:13px; margin-bottom:10px; }
+  .dupes ul { margin:6px 0 0; padding-left:18px; }
+  .reasons { margin:8px 0 0; padding-left:16px; font-size:12px; color:var(--muted); }
+  .reasons li { margin:2px 0; }
+  .feedback { color:var(--good); font-size:13px; min-height:20px; }
+  .rec-on { color:var(--danger); font-weight:700; }
+  footer { text-align:center; color:var(--muted); font-size:13px; padding:0 20px 40px; }
+  @media (max-width:900px) { .cols,.how { grid-template-columns:1fr; } .hero h1 { font-size:32px; } }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <span class="pill">📦 ReproPack v0.2 · browser extension</span>
+  <h1>“It’s broken” → <span class="grad">a report worth filing</span></h1>
+  <p class="lead">Record what happened, capture the errors, and ReproPack organizes it into a clean Markdown report — then files it to GitHub, Jira or Slack. It never invents a cause.</p>
+  <div class="cta">
+    <a class="btn btn-primary" href="#playground">▶ Try the live demo</a>
+    <a class="btn" href="https://github.com/Sharon-Davasia/Repro">⭐ GitHub repo</a>
+  </div>
+</header>
+
+<section class="how">
+  <div class="step"><div class="n">CAPTURE</div><h3>⏺ Record + 📸 screenshot</h3><p>Timeline of clicks and navigations, console errors, every request, and a screenshot or short clip.</p></div>
+  <div class="step"><div class="n">ORGANIZE</div><h3>🧠 Evidence only</h3><p>Template report by default, optional BYO-key AI polish, heuristic severity suggestion with its reasons.</p></div>
+  <div class="step"><div class="n">VERIFY</div><h3>🔍 Duplicate check</h3><p>Fingerprints errors and page patterns to surface reports you already saved — before you file again.</p></div>
+  <div class="step"><div class="n">FILE</div><h3>🚀 One click out</h3><p>GitHub issue, Jira issue (ADF or wiki), Slack message, or your own webhook — plus Markdown, Jira wiki and HAR-lite exports.</p></div>
+</section>
+
+<section class="playground" id="playground">
+  <h2>Live playground</h2>
+  <p>This page runs the same modules the extension ships (<code>lib/report.js</code>, <code>timeline.js</code>, <code>har.js</code>, <code>triage.js</code>, <code>dupes.js</code>, <code>filing.js</code>). In the extension, “Capture” reads the real tab; here it simulates a broken checkout.</p>
+
+  <div class="cols">
+    <div>
+      <div class="card">
+        <h3>🖥️ The broken page (simulated) <span class="hint" id="rec-state">not recording</span></h3>
+        <div class="fake-page">
+          <h4>Shop — Checkout</h4>
+          <div class="hint" style="color:#666">Order total</div>
+          <div class="price">$49.00</div>
+          <button id="demo-pay">Pay now</button>
+          <div class="nav">
+            <button id="demo-cart">← Back to cart</button>
+            <button id="demo-help">Need help?</button>
+          </div>
+          <div class="err" id="demo-err">💥 Something went wrong. Please try again.<br><small>(Console: <code>TypeError: Cannot read properties of undefined (reading 'total')</code>)</small></div>
+        </div>
+        <div class="row">
+          <button class="btn btn-sm" id="btn-rec">⏺ Start recording</button>
+          <button class="btn btn-primary btn-sm" id="btn-capture">📸 Capture evidence</button>
+          <span class="hint" id="cap-status">Not captured yet</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>⏱ Timeline <span class="hint" id="tl-summary">no events</span></h3>
+        <ul class="timeline" id="tl"></ul>
+        <p class="hint">Interactions on the simulated page, timestamped from the moment you started recording. Text you type is never captured.</p>
+      </div>
+
+      <div class="card">
+        <h3>✍️ Your words</h3>
+        <label class="field"><span>Title</span><input id="d-title" type="text" value="Pay button crashes checkout" /></label>
+        <label class="field"><span>What happened?</span><textarea id="d-what" rows="2">Clicking Pay shows an error and the page goes blank.</textarea></label>
+        <label class="field"><span>What did you expect?</span><textarea id="d-expected" rows="2">Payment should complete and show a confirmation.</textarea></label>
+        <label class="field"><span>Steps (one per line)</span><textarea id="d-steps" rows="3">Open checkout&#10;Click Pay now&#10;Error appears, page goes blank</textarea></label>
+        <div class="row">
+          <label class="field" style="flex:1"><span>Severity</span>
+            <select id="d-severity">
+              <option value="">—</option>
+              <option>Blocker — cannot proceed</option>
+              <option>Major — workaround exists</option>
+              <option>Minor — cosmetic / edge case</option>
+              <option>Question — need clarification</option>
+            </select>
+          </label>
+          <label class="field" style="flex:1"><span>Frequency</span>
+            <select id="d-frequency"><option value="">—</option><option>Always</option><option>Sometimes</option><option>Once</option></select>
+          </label>
+        </div>
+        <label class="check"><input type="checkbox" id="d-strip" /> Strip query params from URLs</label>
+        <label class="check"><input type="checkbox" id="d-redact" checked /> Redact tokens &amp; emails</label>
+        <div class="row"><button class="btn btn-primary" id="btn-generate">✨ Generate report</button></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h3>🧠 Severity suggestion <span class="hint">heuristic, not a diagnosis</span></h3>
+        <div id="triage-wrap"><span class="hint">Capture evidence to see a suggestion.</span></div>
+        <ul class="reasons" id="triage-reasons"></ul>
+      </div>
+
+      <div class="card">
+        <h3>📄 Your report</h3>
+        <div class="dupes" id="dupes" style="display:none"><strong>🔍 Possible duplicates</strong><ul id="dupes-list"></ul></div>
+        <div class="missing" id="missing" style="display:none"><strong>⚠️ Still missing</strong><ul id="missing-list"></ul></div>
+        <textarea id="demo-out" spellcheck="false" placeholder="Press “Generate report” to see your Markdown…"></textarea>
+        <div class="row">
+          <button class="btn btn-primary btn-sm" id="btn-copy">📋 Copy Markdown</button>
+          <button class="btn btn-sm" id="btn-jira">Copy Jira wiki</button>
+          <button class="btn btn-sm" id="btn-md">⬇ .md</button>
+          <button class="btn btn-sm" id="btn-har">⬇ HAR-lite</button>
+          <button class="btn btn-sm" id="btn-save-hist">💾 Save (demo)</button>
+          <button class="btn btn-sm" id="btn-payload">👀 Filing payload</button>
+        </div>
+        <p class="feedback" id="feedback"></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>ReproPack organizes evidence — it never invents a cause. Install the extension from the repo README (Load unpacked).</footer>
+
+<script src="../lib/report.js"></script>
+<script src="../lib/timeline.js"></script>
+<script src="../lib/har.js"></script>
+<script src="../lib/triage.js"></script>
+<script src="../lib/dupes.js"></script>
+<script src="../lib/filing.js"></script>
+<script>
+(function () {
+  "use strict";
+  var $ = function (id) { return document.getElementById(id); };
+  var R = window.ReproPackReport, TL = window.ReproPackTimeline, HAR = window.RepoPackHar;
+  var Triage = window.ReproPackTriage, Dupes = window.ReproPackDupes, Filing = window.ReproPackFiling;
+  var Har = window.ReproPackHar;
+
+  var state = { recordStart: 0, recording: false, events: [], evidence: null, markdown: "", history: [] };
+
+  function now() { return Date.now(); }
+  function clock(ms) { return TL.relTime(ms); }
+
+  function rec(kind, label, detail) {
+    if (!state.recording) return;
+    state.events.push({ t: now(), kind: kind, label: label, detail: detail || "" });
+    renderTimeline();
+  }
+
+  function renderTimeline() {
+    var list = $("tl");
+    list.innerHTML = "";
+    var entries = TL.normalize(state.events, { startedAt: state.recordStart });
+    entries.forEach(function (e) {
+      var li = document.createElement("li");
+      var t = document.createElement("span");
+      t.className = "t";
+      t.textContent = e.time;
+      var k = document.createElement("span");
+      k.className = "k " + (e.kind === "error" ? "err" : e.kind === "nav" ? "nav" : e.kind === "click" ? "click" : "");
+      k.textContent = e.label + (e.detail ? " — " + e.detail : "");
+      li.appendChild(t); li.appendChild(k);
+      list.appendChild(li);
+    });
+    $("tl-summary").textContent = entries.length ? TL.summaryLine(entries) : "no events";
+    $("rec-state").textContent = state.recording ? "● recording" : "not recording";
+    $("rec-state").className = state.recording ? "rec-on" : "hint";
+  }
+
+  $("btn-rec").addEventListener("click", function () {
+    state.recording = !state.recording;
+    if (state.recording) {
+      state.recordStart = now();
+      state.events = [{ t: state.recordStart, kind: "start", label: "Recording started", detail: location.href.split("?")[0] }];
+      $("btn-rec").textContent = "⏹ Stop recording";
+      $("btn-rec").classList.add("btn-primary");
+    } else {
+      state.recording = false;
+      state.events.push({ t: now(), kind: "stop", label: "Recording stopped" });
+      $("btn-rec").textContent = "⏺ Start recording";
+      $("btn-rec").classList.remove("btn-primary");
+    }
+    renderTimeline();
+  });
+
+  $("demo-pay").addEventListener("click", function () {
+    rec("click", "Clicked button#pay", "Pay now");
+    $("demo-err").style.display = "block";
+    rec("error", "Uncaught error", "TypeError: Cannot read properties of undefined (reading 'total') at checkout.js:42:7");
+  });
+  $("demo-cart").addEventListener("click", function () { rec("nav", "Navigated (pushState)", "https://shop.example.com/cart"); });
+  $("demo-help").addEventListener("click", function () { rec("click", "Clicked button#help", "Need help?"); });
+
+  $("btn-capture").addEventListener("click", function () {
+    state.evidence = {
+      url: "https://shop.example.com/checkout?session=demo-token-123",
+      title: "Checkout — Shop (demo)",
+      capturedAt: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      viewport: window.innerWidth + "×" + window.innerHeight,
+      referrer: "https://shop.example.com/cart",
+      timelineStartedAt: state.recordStart ? new Date(state.recordStart).toISOString() : null,
+      timeline: state.events.slice(),
+      errors: [
+        { type: "error", message: "TypeError: Cannot read properties of undefined (reading 'total')", source: "checkout.js:42:7", time: new Date().toISOString() },
+        { type: "console.error", message: "Payment failed for demo@example.com token=Bearer abc123def456", source: "", time: new Date().toISOString() }
+      ],
+      network: [
+        { url: "https://api.example.com/pay?token=secret123", method: "POST", status: 500, durationMs: 431, time: new Date().toISOString(), type: "fetch" },
+        { url: "https://api.example.com/cart", method: "GET", status: 200, durationMs: 28, time: new Date().toISOString(), type: "fetch" }
+      ],
+      screenshotDataUrl: "data:image/png;base64,AAAA",
+      screenshotName: "repropack-demo.png",
+      clip: { name: "repropack-clip-demo.webm", durationMs: 4300 },
+      pageInfo: { lang: "en", readyState: "complete", focusedElement: "button#pay" }
+    };
+    state.evidence.harSummary = Har.summary(Har.buildHar(state.evidence.network, { redact: true }));
+    $("cap-status").textContent = "Captured ✓· " + state.evidence.errors.length + " errors, " + state.evidence.network.length + " requests, " + state.evidence.timeline.length + " timeline events";
+    renderTriage();
+  });
+
+  function fallbackEvidence() {
+    return {
+      url: location.href.split("#")[0], title: document.title, capturedAt: new Date().toISOString(),
+      userAgent: navigator.userAgent, viewport: window.innerWidth + "×" + window.innerHeight,
+      errors: [], network: [], timeline: [], pageInfo: {}
+    };
+  }
+
+  function readForm() {
+    return {
+      title: $("d-title").value, whatHappened: $("d-what").value, expected: $("d-expected").value,
+      steps: $("d-steps").value, severity: $("d-severity").value, frequency: $("d-frequency").value,
+      account: "", notes: ""
+    };
+  }
+
+  function opts() { return { stripQueryParams: $("d-strip").checked, redact: $("d-redact").checked, includeTimeline: true }; }
+
+  function currentEvidence() {
+    var ev = JSON.parse(JSON.stringify(state.evidence || fallbackEvidence()));
+    if (!ev.timeline || !ev.timeline.length) ev.timeline = state.events.slice();
+    return ev;
+  }
+
+  function renderTriage() {
+    var ev = currentEvidence();
+    var s = Triage.suggestSeverity(ev, readForm());
+    var cls = s.level.key === "blocker" ? "blk" : s.level.key === "major" ? "maj" : "min";
+    var wrap = $("triage-wrap");
+    wrap.innerHTML = "";
+    var chip = document.createElement("span");
+    chip.className = "chip " + cls;
+    chip.textContent = s.level.label + " · " + Math.round(s.confidence * 100) + "%";
+    wrap.appendChild(chip);
+    var caveat = document.createElement("p");
+    caveat.className = "hint";
+    caveat.textContent = s.caveat;
+    wrap.appendChild(caveat);
+    var ul = $("triage-reasons");
+    ul.innerHTML = "";
+    s.reasons.forEach(function (r) {
+      var li = document.createElement("li");
+      li.textContent = (r.weight > 0 ? "+" : "") + r.weight + " · " + r.label + (r.evidence ? " — " + r.evidence : "");
+      ul.appendChild(li);
+    });
+    return s;
+  }
+
+  $("btn-generate").addEventListener("click", function () {
+    var ev = currentEvidence();
+    var form = readForm();
+    var suggestion = renderTriage();
+    state.markdown = R.generateReport(ev, form, Object.assign({ triage: suggestion }, opts()));
+    $("demo-out").value = state.markdown;
+
+    var missing = R.detectMissing(ev, form);
+    var box = $("missing"), list = $("missing-list");
+    list.innerHTML = "";
+    if (missing.length) {
+      box.style.display = "block";
+      missing.forEach(function (m) { var li = document.createElement("li"); li.textContent = m.label; list.appendChild(li); });
+    } else { box.style.display = "none"; }
+
+    renderDupes(ev, form);
+  });
+
+  function renderDupes(ev, form) {
+    var fp = Dupes.fingerprint(ev, form);
+    var found = Dupes.findDuplicates(fp, state.history);
+    var box = $("dupes"), list = $("dupes-list");
+    list.innerHTML = "";
+    if (!found.length) { box.style.display = "none"; return; }
+    box.style.display = "block";
+    found.forEach(function (d) {
+      var li = document.createElement("li");
+      li.textContent = d.title + " — " + Dupes.percent(d.score) + " match · " + d.reasons[0];
+      list.appendChild(li);
+    });
+  }
+
+  function feedback(msg) { $("feedback").textContent = msg; setTimeout(function () { $("feedback").textContent = ""; }, 3200); }
+
+  $("btn-copy").addEventListener("click", function () {
+    if (!state.markdown) return feedback("Generate a report first.");
+    navigator.clipboard.writeText(state.markdown).then(function () { feedback("Markdown copied ✓"); });
+  });
+  $("btn-jira").addEventListener("click", function () {
+    if (!state.markdown) return feedback("Generate a report first.");
+    navigator.clipboard.writeText(R.toJiraWiki(state.markdown)).then(function () { feedback("Jira wiki copied ✓"); });
+  });
+  $("btn-md").addEventListener("click", function () {
+    if (!state.markdown) return feedback("Generate a report first.");
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([state.markdown], { type: "text/markdown" }));
+    a.download = R.slugify($("d-title").value) + ".md";
+    a.click();
+    feedback("Downloaded ✓");
+  });
+  $("btn-har").addEventListener("click", function () {
+    var ev = currentEvidence();
+    if (!ev.network || !ev.network.length) return feedback("No network activity captured.");
+    var har = Har.buildHar(ev.network, Object.assign({ pageUrl: ev.url, pageTitle: ev.title, startedAt: ev.capturedAt }, opts()));
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([Har.toJson(har)], { type: "application/json" }));
+    a.download = Har.fileName(ev.url, ev.capturedAt);
+    a.click();
+    feedback("HAR-lite downloaded ✓ — " + Har.summary(har).text);
+  });
+  $("btn-save-hist").addEventListener("click", function () {
+    if (!state.markdown) return feedback("Generate a report first.");
+    var ev = currentEvidence();
+    var form = readForm();
+    state.history.unshift({
+      id: "demo-" + state.history.length,
+      title: form.title || "Bug report",
+      savedAt: new Date().toISOString(),
+      fingerprint: Dupes.fingerprint(ev, form)
+    });
+    feedback("Saved to demo history — generate again to see duplicate detection.");
+    renderDupes(ev, form);
+  });
+  $("btn-payload").addEventListener("click", function () {
+    if (!state.markdown) return feedback("Generate a report first.");
+    var ev = currentEvidence();
+    var form = readForm();
+    var req = Filing.buildPayload("github", {
+      title: form.title, markdown: state.markdown, url: ev.url, pageTitle: ev.title,
+      severity: form.severity, frequency: form.frequency, capturedAt: ev.capturedAt,
+      errorCount: (ev.errors || []).length,
+      failedRequestCount: (ev.network || []).filter(function (n) { return Number(n.status) === 0 || Number(n.status) >= 400; }).length,
+      fingerprint: Dupes.fingerprint(ev, form).hash
+    }, { token: "ghp_…(yours, never sent by this demo)", repo: "acme/web", labels: "bug" });
+    // Show the request shape (token replaced for the demo) instead of the report.
+    req.headers.Authorization = "Bearer ghp_…";
+    $("demo-out").value = JSON.stringify({
+      method: req.method, url: req.url, headers: req.headers, body: JSON.parse(req.body)
+    }, null, 2).replace(/("body": ")([\s\S]*?)(")/, function (m, a, b, c) {
+      return a + b.slice(0, 400) + "…" + c;
+    });
+    feedback("This is exactly the request the extension sends. Nothing was sent from this demo.");
+  });
+})();
+</script>
+</body>
+</html>
